@@ -10,10 +10,10 @@ var spotify = new Spotify(keys.spotify);
 var client = new Twitter(keys.twitter);
 
 var songName = "";
+var trigger = false;
 
-function results(response){
+function results(a, b){
   if (process.argv[2] ==  "my-tweets"){
-    //console.log("success");
     var params = {screen_name: 'lawrencejohnny8'};
     client.get('statuses/user_timeline', params, function(error, tweets, response) {
       if (!error) {
@@ -24,9 +24,17 @@ function results(response){
     });
   }
 
-  if (process.argv[2] ==  "spotify-this-song"){
-    songName = process.argv[3].toLowerCase().split(' ').map(function(word) { return word.replace(word[0], word[0].toUpperCase()) }).join(' ');
-    if (process.argv[3] == undefined) {
+  if (process.argv[2] ==  "spotify-this-song" || a == "spotify-this-song"){
+    if (process.argv[2] == "do-what-it-says"){
+      var songName = b;
+    
+      }
+
+      else {
+        var songName = process.argv.slice(3).join(" ").toLowerCase().split(' ').map(function(word) { return word.replace(word[0], word[0].toUpperCase()) }).join(' ');
+    }
+  
+     if (process.argv[3] == undefined && trigger == false) {
       spotify.search({ type: 'track', query: "The Sign" }, function(err, data) {
         if (err) {
           return console.log('Error occurred: ' + err);
@@ -41,12 +49,17 @@ function results(response){
         }
       });
     } else {
+      
         spotify.search({ type: 'track', query: songName }, function(err, data) {
+         
           if (err) {
             return console.log('Error occurred: ' + err);
           }
+          
           for (var i = 0; i < data.tracks.items.length; i++) {
+           
             if (data.tracks.items[i].name == songName){
+              
               console.log(data.tracks.items[i].artists[0].name);
               console.log(data.tracks.items[i].name);
               console.log(data.tracks.items[i].album.name);
@@ -56,8 +69,9 @@ function results(response){
         });
       }
   }
+
   if (process.argv[2] == "movie-this"){
-    request('http://www.omdbapi.com/?t=' + process.argv[3] + '&y=&plot=short&apikey=trilogy', function(error, response, body) {
+    request('http://www.omdbapi.com/?t=' + process.argv.slice[3] + '&y=&plot=short&apikey=trilogy', function(error, response, body) {
       if (!error && response.statusCode === 200) {  
         console.log(JSON.parse(body).Title);
         console.log(JSON.parse(body).Year);
@@ -78,8 +92,25 @@ function results(response){
       }
     });
   }
+  if (process.argv[2] == 'do-what-it-says' && trigger == false) {
+    trigger = true;
+    //get text from random.txt
+    fs.readFile("random.txt", "utf8", function(error, data){
+
+    data = data.split(",");
+  
+    let command = data[0];
+    let searchterm = data[1];
+
+   results(command, searchterm);  // feed it to results function
+    })
+   
+    
+           
+  }
 
 }
 
-results();
+var userInput = process.argv[2];
+results(userInput);
 
